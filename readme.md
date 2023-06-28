@@ -97,6 +97,44 @@ RMS: 439
 
 By observing these values, you can get a sense of which RMS values correspond to speech and which correspond to silence, and adjust the `silence_threshold` and `silence_duration` parameters accordingly.
 
+# Tested Environment and Installation Instructions
+
+This project has been tested on a RaspberryPi 4 using Raspberry Pi OS 64 bit (version 6.1, released on May 3rd, 2023). The SHA of the release is e7c0c89db32d457298fbe93195e9d11e3e6b4eb9e0683a7beb1598ea39a0a7aa.
+
+We used the ReSpeaker 2-Mics Pi HAT as the sound card. More information about this sound card can be found [here](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT_Raspberry/).
+
+## Raspberry Pi Setup
+
+Below are the commands to set up the project on your Raspberry Pi:
+
+1. **Install the ReSpeaker 2-Mics Pi HAT sound card**
+
+```bash
+sudo apt-get update -y
+sudo apt-get install portaudio19-dev libatlas-base-dev -y
+git clone https://github.com/seeed-studio-projects/seeed-voicecard.git
+cd seeed-voicecard
+sudo ./install.sh
+sudo reboot now
+```
+
+2. **Clone the VoiceBotChatGPT-RaspberryPI repository**
+
+```bash
+git clone https://github.com/TamerinTECH/VoiceBotChatGPT-RaspberryPI.git
+cd VoiceBotChatGPT-RaspberryPI.git
+```
+
+3. **Upgrade pip and install the required Python packages**
+
+```bash
+pip install --upgrade pip setuptools wheel
+pip3 install -r requirements.txt
+```
+
+Now, your Raspberry Pi is set up to run the project. Remember to add your API keys to the `config.json` file before running the `main.py` script.
+
+
 ## Limitations
 
 Please note that this project was developed for hackathon and demo purposes. Therefore, there is no guarantee for its performance or functionality. For additional information, please contact the company [TamerinTECH](https://www.tamerin.tech) - [voicebot@tamerin.tech](mailto:voicebot@tamerin.tech)
