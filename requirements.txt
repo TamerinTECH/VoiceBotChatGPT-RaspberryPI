@@ -1,0 +1,12 @@
+json
+pyaudio
+openai
+pvporcupine
+struct
+os
+time
+boto3
+pygame
+audioop
+wave
+uuid
