@@ -1,0 +1,24 @@
+https://console.picovoice.ai/
+
+
+RMS: 347
+RMS: 452
+RMS: 458
+RMS: 575
+RMS: 392
+RMS: 444
+RMS: 474
+RMS: 552
+RMS: 304
+RMS: 535
+RMS: 456
+RMS: 417
+RMS: 226
+RMS: 516
+RMS: 523
+RMS: 219
+RMS: 296
+RMS: 508
+RMS: 375
+RMS: 229
+RMS: 439

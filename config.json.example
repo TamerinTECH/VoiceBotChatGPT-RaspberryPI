@@ -1,0 +1,11 @@
+{
+    "aws_access_key_id": "AKIA...",
+    "aws_secret_access_key": "CbD...",
+    "aws_region": "eu-central-1",
+    "openai_key":"sk-5v...",
+    "openai_org":"org-uu..",
+    "pv_access_key":"oFN...",
+    "sound_card_name": "seeed-2mic-voicecard",
+    "silence_threshold": 600,
+    "silence_duration": 1.5
+}

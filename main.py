@@ -8,6 +8,8 @@ import pyaudio
 import openai
 import time
 
+from tts_service import TextToSpeechService
+
 config = json.load(open("config.json"))
 openai.api_key = config["openai_key"]
 if "openai_org" in config:
@@ -25,20 +27,42 @@ class WakeWordDetector:
                                          #library_path=library_path,
                                          #model_path=model_path,
                                          #keyword_paths=keyword_paths,
-                                         sensitivities=[0.5])
+                                         sensitivities=[1])
 
         self.pa = pyaudio.PyAudio()
-        self.listener = InputListener()
+        #init listener, use values from config or default
+        self.listener = InputListener(config["silence_threshold"] if "silence_threshold" in config else 75, 
+                                      config["silence_duration"] if "silence_duration" in config else 1.5)
+        
+        self.speech = TextToSpeechService()
+        
+        #get from config, or default
+        sound_card_name = config["sound_card_name"] if "sound_card" in config else "seeed-2mic-voicecard"
+         
+        # Find the device index of the sound card
+        print("Looking for sound card...")
+        for i in range(self.pa.get_device_count()):
+            device_info = self.pa.get_device_info_by_index(i)
+            print(device_info['name'])
+            if sound_card_name in device_info['name']:
+                print("Found sound card! Using device index: %d" % i)
+                self.input_device_index = i
+                break
+        else:
+            raise Exception("Could not find sound device")
+
         self._init_audio_stream()
         
 
 
     def _init_audio_stream(self):
+
         self.audio_stream = self.pa.open(rate=self.handle.sample_rate,
                                          channels=1,
                                          format=pyaudio.paInt16,
                                          input=True,
                                          frames_per_buffer=self.handle.frame_length)
+                                         #input_device_index=self.input_device_index)
 
     def run(self):
         try:
@@ -61,6 +85,9 @@ class WakeWordDetector:
                     
                     response = self.chat_gpt_service.send_to_chat_gpt(transcript["text"])
                     print(response)
+
+                    #play response
+                    self.speech.speak(response)
 
                     #delete file
                     os.remove(audio_path)
