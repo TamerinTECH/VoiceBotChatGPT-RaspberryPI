@@ -99,7 +99,7 @@ By observing these values, you can get a sense of which RMS values correspond to
 
 ## Limitations
 
-Please note that this project was developed for hackathon and demo purposes. Therefore, there is no guarantee for its performance or functionality. For additional information, please contact the company [TamerinTECH](https://www.tamerin.tech) - [voicebot@tamerin.tech](mailto://voicebot@tamerin.tech)
+Please note that this project was developed for hackathon and demo purposes. Therefore, there is no guarantee for its performance or functionality. For additional information, please contact the company [TamerinTECH](https://www.tamerin.tech) - [voicebot@tamerin.tech](mailto:voicebot@tamerin.tech)
 
 ## Acknowledgements
 
