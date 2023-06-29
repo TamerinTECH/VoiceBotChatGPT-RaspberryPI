@@ -1,5 +1,7 @@
 # Raspberry Pi Voice Bot ChatGPT
 
+[Link to the demo video](https://youtube.com/shorts/6NRtFTbH-e0?feature=share)
+
 ## Introduction
 
 This project is a voice-activated Raspberry Pi based system that listens for a wake word, "picovoice". Upon hearing the wake word, the system starts recording audio input until it detects silence. It then sends this audio input to OpenAI for transcription and further processing. The response from OpenAI is then converted to speech using Amazon Polly, a text-to-speech service, and played back to the user.
@@ -163,3 +165,5 @@ Please note that this project was developed for hackathon and demo purposes. The
 ## Acknowledgements
 
 This documentation was written by ChatGPT with some supervision by the author
+
+
