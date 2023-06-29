@@ -134,6 +134,27 @@ pip3 install -r requirements.txt
 
 Now, your Raspberry Pi is set up to run the project. Remember to add your API keys to the `config.json` file before running the `main.py` script.
 
+# Setting Up the Default Audio Output Device
+
+In some instances, you may need to manually select the default audio output device. Here is how you can do it:
+
+1. Open the Raspberry Pi configuration settings:
+
+```bash
+sudo raspi-config
+```
+
+2. Navigate through the menu options as follows:
+
+```
+1. System options  
+S2. Audio
+```
+
+3. Select the desired audio output option. In our case, it was the `bcm2835-i2s...` option corresponding to the ReSpeaker sound card.
+
+After you've selected the appropriate option, the system should use this device as the default for audio output.
+
 
 ## Limitations
 
