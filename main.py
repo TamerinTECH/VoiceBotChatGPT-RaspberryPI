@@ -56,7 +56,7 @@ class WakeWordDetector:
         else:
             raise Exception("Could not find sound device")
 
-        self.speech = TextToSpeechService(self.input_device_index)
+        self.speech = TextToSpeechService()#self.input_device_index)
 
         self._init_audio_stream()
 

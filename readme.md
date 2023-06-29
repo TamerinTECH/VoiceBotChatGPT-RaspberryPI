@@ -122,7 +122,7 @@ sudo reboot now
 
 ```bash
 git clone https://github.com/TamerinTECH/VoiceBotChatGPT-RaspberryPI.git
-cd VoiceBotChatGPT-RaspberryPI.git
+cd VoiceBotChatGPT-RaspberryPI
 ```
 
 3. **Upgrade pip and install the required Python packages**
