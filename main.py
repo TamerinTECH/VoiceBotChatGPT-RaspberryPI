@@ -6,6 +6,7 @@ import struct
 import os
 import pyaudio
 import openai
+from silence_detector import ThresholdDetector
 
 from tts_service import TextToSpeechService
 
@@ -16,11 +17,12 @@ if "openai_org" in config:
 
 
 class WakeWordDetector:
-    def __init__(self, library_path, model_path, keyword_paths):
+    def __init__(self, library_path, model_path, keyword_paths, silence_threshold):
         self.chat_gpt_service = ChatGPTService()
         # load access key from config
         pv_access_key = config["pv_access_key"]
 
+        self.silence_threshold = silence_threshold
         self.handle = pvporcupine.create(
             keywords=["picovoice"],
             access_key=pv_access_key,
@@ -33,7 +35,7 @@ class WakeWordDetector:
         self.pa = pyaudio.PyAudio()
         # init listener, use values from config or default
         self.listener = InputListener(
-            config["silence_threshold"] if "silence_threshold" in config else 75,
+            silence_threshold, #config["silence_threshold"] if "silence_threshold" in config else 75,
             config["silence_duration"] if "silence_duration" in config else 1.5,
         )
 
@@ -59,6 +61,8 @@ class WakeWordDetector:
         self.speech = TextToSpeechService()#self.input_device_index)
 
         self._init_audio_stream()
+
+        print("Listening for wake word...(say 'Picovoice') - silence threshold: %d" % self.silence_threshold)
 
     def _init_audio_stream(self):
         self.audio_stream = self.pa.open(
@@ -117,9 +121,14 @@ class WakeWordDetector:
 
 
 if __name__ == "__main__":
+
+    #start with playing sound, then detect silence for 5 seconds
+    detector = ThresholdDetector(5)
+    silence_threshold = detector.detect_threshold()
+
     library_path = "/path/to/porcupine/library"
     model_path = "/path/to/porcupine/model"
     keyword_paths = ["/path/to/porcupine/keyword"]
 
-    detector = WakeWordDetector(library_path, model_path, keyword_paths)
+    detector = WakeWordDetector(library_path, model_path, keyword_paths, silence_threshold)
     detector.run()
