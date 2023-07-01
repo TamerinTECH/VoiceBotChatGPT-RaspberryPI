@@ -6,6 +6,7 @@ import struct
 import os
 import pyaudio
 import openai
+from gpiozero import LED
 
 from tts_service import TextToSpeechService
 
@@ -17,6 +18,13 @@ if "openai_org" in config:
 
 class WakeWordDetector:
     def __init__(self, library_path, model_path, keyword_paths):
+        try:
+            self.led = LED(config["led_pin"])
+            self.led.off()
+        except:
+            print("Could not initialize LED")
+            self.led = None
+
         self.chat_gpt_service = ChatGPTService()
         # load access key from config
         pv_access_key = config["pv_access_key"]
@@ -29,7 +37,7 @@ class WakeWordDetector:
             # keyword_paths=keyword_paths,
             sensitivities=[1],
         )
-
+        
         self.pa = pyaudio.PyAudio()
         # init listener, use values from config or default
         self.listener = InputListener(
@@ -60,6 +68,15 @@ class WakeWordDetector:
 
         self._init_audio_stream()
 
+    def _toggle_led_power(self, state):
+        if self.led is not None:
+            self.led.on() if state else self.led.off()
+
+    def _set_led_blinking(self, on_time=0.5, off_time=0.5):
+        if self.led is not None:
+            self.led.on()
+            self.led.blink(on_time, off_time)
+
     def _init_audio_stream(self):
         self.audio_stream = self.pa.open(
             rate=self.handle.sample_rate,
@@ -72,16 +89,21 @@ class WakeWordDetector:
 
     def run(self):
         try:
+            self._toggle_led_power(True)
+            print("Listening for wake word...")
             while True:
                 pcm = self.audio_stream.read(self.handle.frame_length)
                 pcm = struct.unpack_from("h" * self.handle.frame_length, pcm)
                 porcupine_keyword_index = self.handle.process(pcm)
                 if porcupine_keyword_index >= 0:
                     print("Wake word detected!")
+                    self._set_led_blinking()
                     self.audio_stream.close()
                     self.audio_stream = None
 
                     audio_path = self.listener.listen()
+
+                    self._set_led_blinking(0.3,0.3)
                     print("Transcribing...")
 
                     audio_file = open(audio_path, "rb")
@@ -89,6 +111,7 @@ class WakeWordDetector:
                     transcript = openai.Audio.translate("whisper-1", audio_file)
                     print(transcript)
 
+                    self._set_led_blinking(0.2,0.2)
                     print("Sending to chat GPT...")
                     response = self.chat_gpt_service.send_to_chat_gpt(
                         transcript["text"]
@@ -104,6 +127,8 @@ class WakeWordDetector:
                     os.remove(audio_path)
                     self._init_audio_stream()
 
+                    self._toggle_led_power(False)
+                    self._toggle_led_power(True)
                     print("Listening for wake word...")
 
         except KeyboardInterrupt:

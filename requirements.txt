@@ -5,3 +5,4 @@ boto3
 pygame
 wave
 uuid
+gpiozero

@@ -7,5 +7,6 @@
     "pv_access_key":"oFN...",
     "sound_card_name": "seeed-2mic-voicecard",
     "silence_threshold": 600,
-    "silence_duration": 1.5
+    "silence_duration": 1.5,
+    "led_pin": 5
 }

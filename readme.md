@@ -44,6 +44,7 @@ All the keys and important parameters are stored in the `config.json` file. This
 - Silence threshold (`silence_threshold`): The RMS threshold below which the input is considered silent.
 - Silence duration (`silence_duration`): The duration of silence (in seconds) after which the recording is stopped.
 - Sound card name (`sound_card_name`): The name of the sound card used for audio input.
+- LED GPIO pin (`led_pin`): This is an optional parameter. If you want to use a LED as an indicator, you can provide the GPIO pin number where your LED is connected. This LED will light up when the system is actively listening to commands.
 
 ## Running the Project
 
