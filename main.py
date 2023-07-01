@@ -40,7 +40,7 @@ class WakeWordDetector:
         # get from config, or default
         sound_card_name = (
             config["sound_card_name"]
-            if "sound_card" in config
+            if "sound_card_name" in config
             else "seeed-2mic-voicecard"
         )
 
@@ -48,7 +48,7 @@ class WakeWordDetector:
         print("Looking for sound card...")
         for i in range(self.pa.get_device_count()):
             device_info = self.pa.get_device_info_by_index(i)
-            print(device_info["name"])
+            print(device_info["name"]) 
             if sound_card_name in device_info["name"]:
                 print("Found sound card! Using device index: %d" % i)
                 self.input_device_index = i
