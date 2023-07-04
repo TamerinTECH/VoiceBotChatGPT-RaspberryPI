@@ -33,6 +33,7 @@ class ThresholdDetector:
         while True:
             data = self.stream.read(self.chunk)
             rms = audioop.rms(data, 2)
+            print(f"RMS value: {rms}")
             rms_values.append(rms)
             if time.time() - start_time > self.sample_duration:
                 print("Sample duration completed, stop detecting")
