@@ -8,6 +8,8 @@ import pyaudio
 import openai
 from silence_detector import ThresholdDetector
 from gpiozero import LED
+import pygame
+
 
 from tts_service import TextToSpeechService
 
@@ -18,7 +20,7 @@ if "openai_org" in config:
 
 
 class WakeWordDetector:
-    def __init__(self, library_path, model_path, keyword_paths, silence_threshold):
+    def __init__(self, library_path, model_path, keyword_paths, silence_threshold = 100):
         try:
             self.led = LED(config["led_pin"])
             self.led.off()
@@ -72,11 +74,15 @@ class WakeWordDetector:
 
         print("Listening for wake word...(say 'Picovoice') - silence threshold: %d" % self.silence_threshold)
 
+
+    def set_silence_threshold(self, silence_threshold):
+        self.silence_threshold = silence_threshold
+
     def _toggle_led_power(self, state):
         if self.led is not None:
             self.led.on() if state else self.led.off()
 
-    def _set_led_blinking(self, on_time=0.5, off_time=0.5):
+    def set_led_blinking(self, on_time=0.5, off_time=0.5):
         if self.led is not None:
             self.led.on()
             self.led.blink(on_time, off_time)
@@ -101,13 +107,13 @@ class WakeWordDetector:
                 porcupine_keyword_index = self.handle.process(pcm)
                 if porcupine_keyword_index >= 0:
                     print("Wake word detected!")
-                    self._set_led_blinking()
+                    self.set_led_blinking()
                     self.audio_stream.close()
                     self.audio_stream = None
 
                     audio_path = self.listener.listen()
 
-                    self._set_led_blinking(0.3,0.3)
+                    self.set_led_blinking(0.3,0.3)
                     print("Transcribing...")
 
                     audio_file = open(audio_path, "rb")
@@ -115,7 +121,7 @@ class WakeWordDetector:
                     transcript = openai.Audio.translate("whisper-1", audio_file)
                     print(transcript)
 
-                    self._set_led_blinking(0.2,0.2)
+                    self.set_led_blinking(0.2,0.2)
                     print("Sending to chat GPT...")
                     response = self.chat_gpt_service.send_to_chat_gpt(
                         transcript["text"]
@@ -147,13 +153,30 @@ class WakeWordDetector:
 
 if __name__ == "__main__":
 
-    #start with playing sound, then detect silence for 5 seconds
-    detector = ThresholdDetector(5)
-    silence_threshold = detector.detect_threshold()
-
     library_path = "/path/to/porcupine/library"
     model_path = "/path/to/porcupine/model"
     keyword_paths = ["/path/to/porcupine/keyword"]
 
-    detector = WakeWordDetector(library_path, model_path, keyword_paths, silence_threshold)
-    detector.run()
+    wake_word_detector = WakeWordDetector(library_path, model_path, keyword_paths)
+
+    #play startup music if configured in config
+    if "startup_music" in config:
+        print("Playing startup music...")
+        pygame.mixer.init()     
+        pygame.mixer.music.load(config["startup_music"])
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            pass
+            
+
+    #start with playing sound, then detect silence for 5 seconds
+
+    print("Detecting silence...")
+    wake_word_detector.set_led_blinking(0.2,0.2)
+    threshold_detector = ThresholdDetector(5)
+    silence_threshold = threshold_detector.detect_threshold()
+    
+
+    wake_word_detector.set_silence_threshold(silence_threshold)
+
+    wake_word_detector.run()
