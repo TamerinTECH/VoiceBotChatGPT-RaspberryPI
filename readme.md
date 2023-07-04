@@ -157,6 +157,17 @@ S2. Audio
 
 After you've selected the appropriate option, the system should use this device as the default for audio output.
 
+## Startup
+
+Upon starting the application, the first 5 seconds will be used to automatically detect the silence threshold. During this time, it is recommended to stay quiet so the system can accurately capture the baseline ambient noise level in your environment.
+
+The detected silence threshold will be used throughout the session to determine periods of silence. This allows the system to adjust to different noise environments and ensures more accurate detection of when a user has finished speaking.
+
+To start the application, you simply run the main script. During the initial silence detection phase, you might want to avoid speaking or creating any significant noise so as not to interfere with the threshold detection.
+
+Once the silence threshold is set, the application is ready to listen for your commands. If you've opted to use the LED indicator and have correctly set the `led_pin` in your `config.json` file, the LED will light up when the system is actively listening to your commands.
+
+Remember, this silence threshold detection is performed every time the application starts. If you find the application is not accurately detecting the end of commands, it might be worth restarting the application in a quieter environment to get a more accurate silence threshold.
 
 ## Limitations
 
