@@ -1,0 +1,1 @@
+mv "assets/porcupine/Hey KITT_raspberry-pi.ppn" /home/pi/.local/lib/python3.9/site-packages/pvporcupine/resources/keyword_files/raspberry-pi

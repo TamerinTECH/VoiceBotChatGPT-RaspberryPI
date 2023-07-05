@@ -9,9 +9,12 @@ import openai
 from silence_detector import ThresholdDetector
 from gpiozero import LED
 import pygame
+from kitt_prompt import prompt_template
 
 
 from tts_service import TextToSpeechService
+
+wakeup_keyword = "Hello KITT"
 
 config = json.load(open("config.json"))
 openai.api_key = config["openai_key"]
@@ -20,7 +23,7 @@ if "openai_org" in config:
 
 
 class WakeWordDetector:
-    def __init__(self, library_path, model_path, keyword_paths, silence_threshold = 100):
+    def __init__(self, silence_threshold=100):
         try:
             self.led = LED(config["led_pin"])
             self.led.off()
@@ -28,24 +31,21 @@ class WakeWordDetector:
             print("Could not initialize LED")
             self.led = None
 
-        self.chat_gpt_service = ChatGPTService()
+        self.chat_gpt_service = ChatGPTService(prompt=prompt_template)
         # load access key from config
         pv_access_key = config["pv_access_key"]
 
         self.silence_threshold = silence_threshold
         self.handle = pvporcupine.create(
-            keywords=["picovoice"],
+            keywords=[wakeup_keyword],
             access_key=pv_access_key,
-            # library_path=library_path,
-            # model_path=model_path,
-            # keyword_paths=keyword_paths,
             sensitivities=[1],
         )
-        
+
         self.pa = pyaudio.PyAudio()
         # init listener, use values from config or default
         self.listener = InputListener(
-            silence_threshold, #config["silence_threshold"] if "silence_threshold" in config else 75,
+            silence_threshold,  # config["silence_threshold"] if "silence_threshold" in config else 75,
             config["silence_duration"] if "silence_duration" in config else 1.5,
         )
 
@@ -60,7 +60,7 @@ class WakeWordDetector:
         print("Looking for sound card...")
         for i in range(self.pa.get_device_count()):
             device_info = self.pa.get_device_info_by_index(i)
-            print(device_info["name"]) 
+            print(device_info["name"])
             if sound_card_name in device_info["name"]:
                 print("Found sound card! Using device index: %d" % i)
                 self.input_device_index = i
@@ -68,7 +68,7 @@ class WakeWordDetector:
         else:
             raise Exception("Could not find sound device")
 
-        self.speech = TextToSpeechService()#self.input_device_index)
+        self.speech = TextToSpeechService(mode="aws")  # self.input_device_index)
 
         self._init_audio_stream()
 
@@ -96,8 +96,9 @@ class WakeWordDetector:
 
     def run(self):
         try:
-            self._toggle_led_power(True)
-            print("Listening for wake word...(say 'Picovoice') - silence threshold: %d" % self.silence_threshold)
+            self._toggle_led_power(True) 
+            print("Listening for wake word '%s' with silence threshold %d..." % (wakeup_keyword, self.silence_threshold))
+
 
             while True:
                 pcm = self.audio_stream.read(self.handle.frame_length)
@@ -111,7 +112,7 @@ class WakeWordDetector:
 
                     audio_path = self.listener.listen()
 
-                    self.set_led_blinking(0.3,0.3)
+                    self.set_led_blinking(0.3, 0.3)
                     print("Transcribing...")
 
                     audio_file = open(audio_path, "rb")
@@ -119,13 +120,12 @@ class WakeWordDetector:
                     transcript = openai.Audio.translate("whisper-1", audio_file)
                     print(transcript)
 
-                    self.set_led_blinking(0.2,0.2)
+                    self.set_led_blinking(0.2, 0.2)
                     print("Sending to chat GPT...")
                     response = self.chat_gpt_service.send_to_chat_gpt(
                         transcript["text"]
                     )
                     print(response)
-
 
                     print("Playing response...")
                     # play response
@@ -151,29 +151,23 @@ class WakeWordDetector:
 
 if __name__ == "__main__":
 
-    library_path = "/path/to/porcupine/library"
-    model_path = "/path/to/porcupine/model"
-    keyword_paths = ["/path/to/porcupine/keyword"]
+    wake_word_detector = WakeWordDetector()
 
-    wake_word_detector = WakeWordDetector(library_path, model_path, keyword_paths)
-
-    #play startup music if configured in config
+    # play startup music if configured in config
     if "startup_music" in config:
         print("Playing startup music...")
-        pygame.mixer.init()     
+        pygame.mixer.init()
         pygame.mixer.music.load(config["startup_music"])
         pygame.mixer.music.play()
         while pygame.mixer.music.get_busy():
             pass
-            
 
-    #start with playing sound, then detect silence for 5 seconds
+    # start with playing sound, then detect silence for 5 seconds
 
     print("Detecting silence...")
-    wake_word_detector.set_led_blinking(0.2,0.2)
+    wake_word_detector.set_led_blinking(0.2, 0.2)
     threshold_detector = ThresholdDetector(5)
     silence_threshold = threshold_detector.detect_threshold()
-    
 
     wake_word_detector.set_silence_threshold(silence_threshold)
 
