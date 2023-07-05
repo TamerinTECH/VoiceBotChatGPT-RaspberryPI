@@ -17,6 +17,7 @@ StandardError=journal
 
 Type=simple
 WorkingDirectory=$SCRIPT_DIR
+ExecStartPre=/bin/sleep 5
 ExecStart=/usr/bin/python3 $SCRIPT_PATH
 User=$USER_NAME
 Restart=on-abort

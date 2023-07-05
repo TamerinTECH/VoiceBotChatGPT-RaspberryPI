@@ -5,7 +5,7 @@ import pyaudio
 import logging
 from systemd import journal
 
-log = logging.getLogger('GPTVoiceAssistant')
+log = logging.getLogger('ThesholdDetector')
 log.addHandler(journal.JournaldLogHandler())
 log.setLevel(logging.DEBUG)
 

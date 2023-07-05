@@ -176,6 +176,7 @@ if __name__ == "__main__":
         pygame.mixer.music.play()
         while pygame.mixer.music.get_busy():
             pass
+        log.debug("Startup music finished")
 
     # start with playing sound, then detect silence for 5 seconds
 
