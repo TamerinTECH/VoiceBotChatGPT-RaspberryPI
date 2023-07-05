@@ -10,7 +10,7 @@ from silence_detector import ThresholdDetector
 from gpiozero import LED
 import pygame
 from kitt_prompt import prompt_template
-
+import time
 
 from tts_service import TextToSpeechService
 
@@ -56,17 +56,24 @@ class WakeWordDetector:
             else "seeed-2mic-voicecard"
         )
 
-        # Find the device index of the sound card
         print("Looking for sound card...")
-        for i in range(self.pa.get_device_count()):
-            device_info = self.pa.get_device_info_by_index(i)
-            print(device_info["name"])
-            if sound_card_name in device_info["name"]:
-                print("Found sound card! Using device index: %d" % i)
-                self.input_device_index = i
-                break
-        else:
-            raise Exception("Could not find sound device")
+        # Find the device index of the sound card, if cannot find, wait 3 seconds and try again, for maximum of 10 times
+        attempts = 0
+        while True:
+            for i in range(self.pa.get_device_count()):
+                device_info = self.pa.get_device_info_by_index(i)
+                print(device_info["name"])
+                if sound_card_name in device_info["name"]:
+                    print("Found sound card! Using device index: %d" % i)
+                    self.input_device_index = i
+                    break
+                else:
+                    attempts += 1
+                    if attempts > 10:
+                        raise Exception("Could not find sound device")
+                    else:
+                        print("Sound card not found, waiting 3 seconds...")
+                        time.sleep(3)
 
         self.speech = TextToSpeechService(mode="aws")  # self.input_device_index)
 
