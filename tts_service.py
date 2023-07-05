@@ -56,11 +56,14 @@ class TextToSpeechService:
             output_url = None
             for event in client.events():
                 print(event.data)
-                data_json = json.loads(event.data)
-                if event.data == '[DONE]' or 'url' in data_json:
-                    output_url = data_json['url']
-                    print("Found output url: " + output_url)
-                    break
+                try:
+                    data_json = json.loads(event.data)
+                    if event.data == '[DONE]' or 'url' in data_json:
+                        output_url = data_json['url']
+                        print("Found output url: " + output_url)
+                        break
+                except:
+                    pass
 
             #download the file
             print("Downloading file from: " + output_url)
