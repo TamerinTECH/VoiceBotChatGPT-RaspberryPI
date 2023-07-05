@@ -11,8 +11,15 @@ from gpiozero import LED
 import pygame
 from kitt_prompt import prompt_template
 import time
-
 from tts_service import TextToSpeechService
+
+import logging
+from systemd import journal
+
+log = logging.getLogger('GPTVoiceAssistant')
+log.addHandler(journal.JournaldLogHandler())
+log.setLevel(logging.DEBUG)
+
 
 wakeup_keyword = "Hello KITT"
 
@@ -28,7 +35,7 @@ class WakeWordDetector:
             self.led = LED(config["led_pin"])
             self.led.off()
         except:
-            print("Could not initialize LED")
+            log.error("Could not initialize LED")
             self.led = None
 
         self.chat_gpt_service = ChatGPTService(prompt=prompt_template)
@@ -56,24 +63,25 @@ class WakeWordDetector:
             else "seeed-2mic-voicecard"
         )
 
-        print("Looking for sound card...")
+        log.info("Looking for sound card...")
         # Find the device index of the sound card, if cannot find, wait 3 seconds and try again, for maximum of 10 times
         attempts = 0
-        while True:
+        self.input_device_index = None
+        while True and attempts < 10 and self.input_device_index is None:
             for i in range(self.pa.get_device_count()):
                 device_info = self.pa.get_device_info_by_index(i)
-                print(device_info["name"])
+                log.debug(device_info["name"])
                 if sound_card_name in device_info["name"]:
-                    print("Found sound card! Using device index: %d" % i)
+                    log.info("Found sound card! Using device index: %d" % i)
                     self.input_device_index = i
                     break
+            if self.input_device_index is None:
+                attempts += 1
+                if attempts > 10:
+                    raise Exception("Could not find sound device")
                 else:
-                    attempts += 1
-                    if attempts > 10:
-                        raise Exception("Could not find sound device")
-                    else:
-                        print("Sound card not found, waiting 3 seconds...")
-                        time.sleep(3)
+                    log.warning("Sound card not found, waiting 5 seconds...")
+                    time.sleep(5)
 
         self.speech = TextToSpeechService(mode="aws")  # self.input_device_index)
 
@@ -104,7 +112,7 @@ class WakeWordDetector:
     def run(self):
         try:
             self._toggle_led_power(True) 
-            print("Listening for wake word '%s' with silence threshold %d..." % (wakeup_keyword, self.silence_threshold))
+            log.info("Listening for wake word '%s' with silence threshold %d..." % (wakeup_keyword, self.silence_threshold))
 
 
             while True:
@@ -112,7 +120,7 @@ class WakeWordDetector:
                 pcm = struct.unpack_from("h" * self.handle.frame_length, pcm)
                 porcupine_keyword_index = self.handle.process(pcm)
                 if porcupine_keyword_index >= 0:
-                    print("Wake word detected!")
+                    log.info("Wake word detected!")
                     self.set_led_blinking()
                     self.audio_stream.close()
                     self.audio_stream = None
@@ -120,21 +128,21 @@ class WakeWordDetector:
                     audio_path = self.listener.listen()
 
                     self.set_led_blinking(0.3, 0.3)
-                    print("Transcribing...")
+                    log.info("Transcribing...")
 
                     audio_file = open(audio_path, "rb")
 
                     transcript = openai.Audio.translate("whisper-1", audio_file)
-                    print(transcript)
+                    log.debug(transcript)
 
                     self.set_led_blinking(0.2, 0.2)
-                    print("Sending to chat GPT...")
+                    log.info("Sending to chat GPT...")
                     response = self.chat_gpt_service.send_to_chat_gpt(
                         transcript["text"]
                     )
-                    print(response)
+                    log.debug(response)
 
-                    print("Playing response...")
+                    log.info("Playing response...")
                     # play response
                     self.speech.speak(response)
 
@@ -144,7 +152,7 @@ class WakeWordDetector:
 
                     self._toggle_led_power(False)
                     self._toggle_led_power(True)
-                    print("Listening for wake word...")
+                    log.info("Listening for wake word...")
 
         except KeyboardInterrupt:
             pass
@@ -162,7 +170,7 @@ if __name__ == "__main__":
 
     # play startup music if configured in config
     if "startup_music" in config:
-        print("Playing startup music...")
+        log.info("Playing startup music...")
         pygame.mixer.init()
         pygame.mixer.music.load(config["startup_music"])
         pygame.mixer.music.play()
@@ -171,7 +179,7 @@ if __name__ == "__main__":
 
     # start with playing sound, then detect silence for 5 seconds
 
-    print("Detecting silence...")
+    log.info("Detecting silence...")
     wake_word_detector.set_led_blinking(0.2, 0.2)
     threshold_detector = ThresholdDetector(5)
     silence_threshold = threshold_detector.detect_threshold()

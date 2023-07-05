@@ -8,14 +8,21 @@ USER_NAME="pi"
 
 echo "[Unit]
 Description=VoiceBot Service
-After=multi-user.target
+Requires=seeed-voicecard.service
+After=network.target multi-user.target
 
 [Service]
-Type=idle
+StandardOutput=journal
+StandardError=journal
+
+Type=simple
 WorkingDirectory=$SCRIPT_DIR
 ExecStart=/usr/bin/python3 $SCRIPT_PATH
 User=$USER_NAME
-Restart=always
+Restart=on-abort
+
+Environment="PULSE_SERVER=/run/user/1000/pulse/native"
+
 
 [Install]
 WantedBy=multi-user.target" > /etc/systemd/system/$SERVICE_NAME.service

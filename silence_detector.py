@@ -2,6 +2,14 @@ import time
 import audioop
 import pyaudio
 
+import logging
+from systemd import journal
+
+log = logging.getLogger('GPTVoiceAssistant')
+log.addHandler(journal.JournaldLogHandler())
+log.setLevel(logging.DEBUG)
+
+
 class ThresholdDetector:
     def __init__(self, sample_duration=5):
         self.chunk = 1024
@@ -29,20 +37,20 @@ class ThresholdDetector:
         self.start()
         rms_values = []
         start_time = time.time()
-        print("Start detecting threshold...")
+        log.info("Start detecting threshold...")
         while True:
             data = self.stream.read(self.chunk)
             rms = audioop.rms(data, 2)
-            print(f"RMS value: {rms}")
+            log.debug(f"RMS value: {rms}")
             rms_values.append(rms)
             if time.time() - start_time > self.sample_duration:
-                print("Sample duration completed, stop detecting")
+                log.info("Sample duration completed, stop detecting")
                 break
         self.stop()
 
         # Calculate the average RMS value as the silence threshold
         average_rms = sum(rms_values) / len(rms_values)
-        print(f"The average RMS value is {average_rms}")
+        log.info(f"The average RMS value is {average_rms}")
         return average_rms
 
 if __name__ == "__main__":

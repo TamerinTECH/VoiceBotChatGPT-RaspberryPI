@@ -6,6 +6,13 @@ import wave
 import uuid
 import os
 
+import logging
+from systemd import journal
+
+log = logging.getLogger('GPTVoiceAssistant')
+log.addHandler(journal.JournaldLogHandler())
+log.setLevel(logging.DEBUG)
+
 
 class InputListener:
     def __init__(self, silence_threshold=75, silence_duration=1.5):
@@ -54,17 +61,17 @@ class InputListener:
     def listen(self):
         self.start()
         silence_start_time = None
-        print("Start recording...")
+        log.info("Start recording...")
         while True:
             data = self.stream.read(self.chunk)
             self.frames.append(data)
             rms = audioop.rms(data, 2)
-            print(f"RMS: {rms}")  # Debugging print
+            log.debug(f"RMS: {rms}")  # Debugging print
             if rms < self.silence_threshold:
                 if silence_start_time is None:
                     silence_start_time = time.time()
                 elif time.time() - silence_start_time > self.silence_duration:
-                    print("Silence detected, stop recording")
+                    log.info("Silence detected, stop recording")
                     break
             else:
                 silence_start_time = None
@@ -96,6 +103,6 @@ class InputListener:
                 "FAILED",
             ]:
                 break
-            print("Not ready yet...")
+            log.debug("Not ready yet...")
             time.sleep(5)
-        print(status)
+        log.info(status)

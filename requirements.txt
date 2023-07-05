@@ -7,3 +7,5 @@ wave
 uuid
 gpiozero
 sseclient-py
+systemd-python
+#apt install python3-systemd libsystemd-dev

@@ -5,6 +5,13 @@ import os
 import openai
 import time
 
+import logging
+from systemd import journal
+
+log = logging.getLogger('ChatGPTServices')
+log.addHandler(journal.JournaldLogHandler())
+log.setLevel(logging.DEBUG)
+
 
 config = json.load(open("config.json"))
 openai.api_key = config["openai_key"]
@@ -27,7 +34,7 @@ class ChatGPTService:
 
         #check if the total tokens length exceed the total of 16k tokens
         while self._get_history_token_size() > 16000:
-            print("ChatGPT History too long, removing oldest message")
+            log.warn("ChatGPT History too long, removing oldest message")
             #remove the oldest message - except the first one (system role)
             if len(self.history) > 2:
                 self.history.pop(1)

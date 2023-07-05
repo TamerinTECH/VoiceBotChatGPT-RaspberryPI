@@ -8,6 +8,13 @@ import requests
 import json
 import sseclient
 
+import logging
+from systemd import journal
+
+log = logging.getLogger('GPTVoiceAssistant')
+log.addHandler(journal.JournaldLogHandler())
+log.setLevel(logging.DEBUG)
+
 
 class TextToSpeechService:
     def __init__(self, mode="voice-clone"):
@@ -22,10 +29,10 @@ class TextToSpeechService:
                 'Content-Type': 'application/json'
                 }
             
-            print("Getting voice id from play.ht...")
+            log.info("Getting voice id from play.ht...")
             #list cloned voices
             response = requests.request("GET", "https://play.ht/api/v2/cloned-voices", headers=self.playht_header)
-            print(response.text)
+            log.debug(response.text)
             #get the first voice id (or later - add a check for the voice name ["name"])
             self.playht_voice_id = json.loads(response.text)[0]["id"]
         else:
@@ -48,25 +55,25 @@ class TextToSpeechService:
             headers = self.playht_header
             headers['Accept']= 'text/event-stream'
 
-            print("Sending request to play.ht...")
+            log.info("Sending request to play.ht...")
             response = requests.request("POST", "https://play.ht/api/v2/tts", headers=headers, data=payload)
 
             client = sseclient.SSEClient(response)
 
             output_url = None
             for event in client.events():
-                print(event.data)
+                log.debug(event.data)
                 try:
                     data_json = json.loads(event.data)
                     if event.data == '[DONE]' or 'url' in data_json:
                         output_url = data_json['url']
-                        print("Found output url: " + output_url)
+                        log.info("Found output url: " + output_url)
                         break
                 except:
                     pass
 
             #download the file
-            print("Downloading file from: " + output_url)
+            log.info("Downloading file from: " + output_url)
             response = requests.request("GET", output_url)
             with open('output.mp3', 'wb') as f:
                 f.write(response.content)
