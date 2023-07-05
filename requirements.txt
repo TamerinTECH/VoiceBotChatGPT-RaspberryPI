@@ -6,3 +6,4 @@ pygame
 wave
 uuid
 gpiozero
+sseclient-py

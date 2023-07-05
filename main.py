@@ -72,9 +72,6 @@ class WakeWordDetector:
 
         self._init_audio_stream()
 
-        print("Listening for wake word...(say 'Picovoice') - silence threshold: %d" % self.silence_threshold)
-
-
     def set_silence_threshold(self, silence_threshold):
         self.silence_threshold = silence_threshold
 
@@ -100,7 +97,8 @@ class WakeWordDetector:
     def run(self):
         try:
             self._toggle_led_power(True)
-            print("Listening for wake word...")
+            print("Listening for wake word...(say 'Picovoice') - silence threshold: %d" % self.silence_threshold)
+
             while True:
                 pcm = self.audio_stream.read(self.handle.frame_length)
                 pcm = struct.unpack_from("h" * self.handle.frame_length, pcm)
