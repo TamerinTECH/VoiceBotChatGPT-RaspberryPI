@@ -9,7 +9,7 @@ import logging
 from systemd import journal
 
 log = logging.getLogger('ChatGPTServices')
-log.addHandler(journal.JournaldLogHandler())
+log.addHandler(journal.JournalHandler())
 log.setLevel(logging.DEBUG)
 
 

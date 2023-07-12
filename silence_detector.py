@@ -6,7 +6,7 @@ import logging
 from systemd import journal
 
 log = logging.getLogger('ThesholdDetector')
-log.addHandler(journal.JournaldLogHandler())
+log.addHandler(journal.JournalHandler())
 log.setLevel(logging.DEBUG)
 
 
@@ -20,6 +20,7 @@ class ThresholdDetector:
         self.audio = pyaudio.PyAudio()
 
     def start(self):
+        log.info("Start detecting threshold...")
         self.stream = self.audio.open(
             format=self.format,
             channels=self.channels,

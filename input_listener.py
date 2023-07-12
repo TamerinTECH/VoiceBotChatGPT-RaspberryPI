@@ -10,34 +10,44 @@ import logging
 from systemd import journal
 
 log = logging.getLogger('InputListener')
-log.addHandler(journal.JournaldLogHandler())
+log.addHandler(journal.JournalHandler())
 log.setLevel(logging.DEBUG)
 
 
 class InputListener:
-    def __init__(self, silence_threshold=75, silence_duration=1.5):
+    def __init__(self, silence_threshold=75, silence_duration=1.5, pyaudio_obj=None, audio_stream=None, open_and_close_audio=True):
         self.chunk = 1024
         self.format = pyaudio.paInt16
         self.channels = 1
         self.rate = 16000
         self.silence_threshold = silence_threshold
         self.silence_duration = silence_duration
-        self.audio = pyaudio.PyAudio()
+        if pyaudio_obj is None:
+            self.audio = pyaudio.PyAudio()
+        else:
+            self.audio = pyaudio_obj
+        self.stream = audio_stream
+        self.open_and_close_audio = open_and_close_audio
         self.frames = []
 
+    def set_silence_threshold(self, silence_threshold):
+        self.silence_threshold = silence_threshold
+
     def start(self):
-        self.stream = self.audio.open(
-            format=self.format,
-            channels=self.channels,
-            rate=self.rate,
-            input=True,
-            frames_per_buffer=self.chunk,
-        )
+        if self.open_and_close_audio:
+            self.stream = self.audio.open(
+                format=self.format,
+                channels=self.channels,
+                rate=self.rate,
+                input=True,
+                frames_per_buffer=self.chunk,
+            )
 
     def stop(self):
-        self.stream.stop_stream()
-        self.stream.close()
-        self.audio.terminate()
+        if (self.open_and_close_audio):
+            self.stream.stop_stream()
+            self.stream.close()
+            self.audio.terminate()
 
     def save_audio_to_file(self, audio_data):
         # Generate a random file name
@@ -61,7 +71,7 @@ class InputListener:
     def listen(self):
         self.start()
         silence_start_time = None
-        log.info("Start recording...")
+        log.info("Start recording... the threshold is {}".format(self.silence_threshold))
         while True:
             data = self.stream.read(self.chunk)
             self.frames.append(data)
